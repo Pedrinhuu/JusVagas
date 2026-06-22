@@ -6,12 +6,17 @@ import httpx
 from bs4 import BeautifulSoup
 
 from models import Vaga
-from scrapers import gerar_hash, detectar_modalidade, HEADERS_BROWSER
+from scrapers import gerar_hash, detectar_modalidade, HEADERS_BROWSER, semaforos
 
 logger = logging.getLogger(__name__)
 
 
 async def buscar_vagas_com(query: str, incluir_remoto: bool = False) -> List[Vaga]:
+    async with semaforos["vagas_com"]:
+        return await _buscar_vagas_com(query, incluir_remoto)
+
+
+async def _buscar_vagas_com(query: str, incluir_remoto: bool) -> List[Vaga]:
     vagas = []
     slug = query.lower().replace(" ", "-")
     urls = [f"https://www.vagas.com.br/vagas-de-{slug}"]

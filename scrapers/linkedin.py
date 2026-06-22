@@ -7,7 +7,7 @@ import httpx
 from bs4 import BeautifulSoup
 
 from models import Vaga
-from scrapers import gerar_hash, detectar_modalidade, HEADERS_BROWSER
+from scrapers import gerar_hash, detectar_modalidade, HEADERS_BROWSER, semaforos
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +15,11 @@ BASE_URL = "https://www.linkedin.com/jobs/search/"
 
 
 async def buscar_linkedin(query: str, cidade: str = "Rio de Janeiro", incluir_remoto: bool = False) -> List[Vaga]:
+    async with semaforos["linkedin"]:
+        return await _buscar_linkedin(query, cidade, incluir_remoto)
+
+
+async def _buscar_linkedin(query: str, cidade: str, incluir_remoto: bool) -> List[Vaga]:
     vagas = []
     hashes = set()
 

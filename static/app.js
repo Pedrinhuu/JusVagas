@@ -1,14 +1,10 @@
 let offset = 0;
 const LIMIT = 50;
 let debounceTimer = null;
+let buscaStreamAtiva = false;
+let contadorStream = 0;
 
-let pollingTimer = null;
-
-document.addEventListener("DOMContentLoaded", () => {
-    carregarStatus();
-    carregarVagas();
-    iniciarPolling();
-
+document.addEventListener("DOMContentLoaded", async () => {
     const filtros = ["filtro-texto", "filtro-status", "filtro-area", "filtro-regime", "filtro-fonte", "filtro-modalidade", "filtro-ordenar"];
     filtros.forEach(id => {
         const el = document.getElementById(id);
@@ -17,23 +13,77 @@ document.addEventListener("DOMContentLoaded", () => {
             debounceTimer = setTimeout(() => { offset = 0; carregarVagas(); }, 300);
         });
     });
+
+    await carregarStatus();
+    const resp = await fetch("/api/status");
+    const data = await resp.json();
+
+    if (data.total_vagas === 0 && !data.ultima_busca) {
+        buscarVagasStream();
+    } else {
+        carregarVagas();
+    }
 });
 
-function iniciarPolling() {
-    let ultimoTotal = -1;
-    pollingTimer = setInterval(async () => {
-        try {
-            const resp = await fetch("/api/status");
-            const data = await resp.json();
-            const totalAtual = data.total_vagas;
-            if (ultimoTotal !== -1 && totalAtual !== ultimoTotal) {
-                offset = 0;
+function buscarVagasStream() {
+    if (buscaStreamAtiva) return;
+    buscaStreamAtiva = true;
+    contadorStream = 0;
+
+    const btn = document.getElementById("btn-buscar");
+    btn.disabled = true;
+    btn.textContent = "Buscando...";
+
+    const grid = document.getElementById("grid-vagas");
+    const empty = document.getElementById("empty-state");
+    const mais = document.getElementById("carregar-mais");
+    empty.style.display = "none";
+    mais.style.display = "none";
+
+    const filtroStatus = document.getElementById("filtro-status").value;
+
+    const eventSource = new EventSource("/api/buscar/stream");
+
+    eventSource.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+
+        if (data.fim) {
+            eventSource.close();
+            buscaStreamAtiva = false;
+            restaurarBotao(btn);
+            carregarStatus();
+            mostrarToast(`Busca concluída: ${data.novas} vagas novas de ${data.total_bruto} capturadas`);
+            if (contadorStream === 0) {
                 carregarVagas();
             }
-            ultimoTotal = totalAtual;
-            carregarStatus();
-        } catch (e) { /* silencioso */ }
-    }, 15000);
+            return;
+        }
+
+        contadorStream++;
+        atualizarContadorStream();
+
+        if (!filtroStatus || data.status === filtroStatus) {
+            grid.insertBefore(criarCard(data), grid.firstChild);
+            empty.style.display = "none";
+        }
+    };
+
+    eventSource.onerror = function() {
+        eventSource.close();
+        buscaStreamAtiva = false;
+        restaurarBotao(btn);
+        carregarVagas();
+        carregarStatus();
+    };
+}
+
+function atualizarContadorStream() {
+    document.getElementById("badge-novas").textContent = `${contadorStream} vagas novas hoje`;
+}
+
+function restaurarBotao(btn) {
+    btn.disabled = false;
+    btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M7 1a6 6 0 104.32 10.14l3.27 3.27a.75.75 0 001.06-1.06l-3.27-3.27A6 6 0 007 1zM2.5 7a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0z" fill="currentColor"/></svg> Buscar agora`;
 }
 
 function getFiltros() {
@@ -180,29 +230,17 @@ function toggleNota(btn) {
     if (campo.style.display === "block") campo.focus();
 }
 
-async function dispararBusca() {
-    const btn = document.getElementById("btn-buscar");
-    btn.disabled = true;
-    btn.textContent = "Buscando...";
-    try {
-        await fetch("/api/buscar", { method: "POST" });
-        mostrarToast("Busca iniciada em segundo plano");
-        aguardarBusca();
-    } catch (e) {
-        mostrarToast("Erro ao iniciar busca");
-    } finally {
-        setTimeout(() => {
-            btn.disabled = false;
-            btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M7 1a6 6 0 104.32 10.14l3.27 3.27a.75.75 0 001.06-1.06l-3.27-3.27A6 6 0 007 1zM2.5 7a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0z" fill="currentColor"/></svg> Buscar agora`;
-        }, 3000);
-    }
+function dispararBusca() {
+    buscarVagasStream();
 }
 
 async function carregarStatus() {
     try {
         const resp = await fetch("/api/status");
         const data = await resp.json();
-        document.getElementById("badge-novas").textContent = `${data.vagas_novas_hoje} vagas novas hoje`;
+        if (!buscaStreamAtiva) {
+            document.getElementById("badge-novas").textContent = `${data.vagas_novas_hoje} vagas novas hoje`;
+        }
         if (data.ultima_busca) {
             document.getElementById("ultima-atualizacao").textContent = `Última busca: ${tempoRelativo(data.ultima_busca)}`;
         }
@@ -219,25 +257,6 @@ function limparFiltros() {
     document.getElementById("filtro-ordenar").value = "recentes";
     offset = 0;
     carregarVagas();
-}
-
-function aguardarBusca() {
-    let tentativas = 0;
-    const intervalo = setInterval(async () => {
-        tentativas++;
-        try {
-            const resp = await fetch("/api/status");
-            const data = await resp.json();
-            if (data.ultima_busca || tentativas >= 40) {
-                clearInterval(intervalo);
-                offset = 0;
-                carregarVagas();
-                carregarStatus();
-            }
-        } catch (e) {
-            if (tentativas >= 40) clearInterval(intervalo);
-        }
-    }, 10000);
 }
 
 function diasDesde(dataStr) {

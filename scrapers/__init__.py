@@ -1,7 +1,15 @@
+import asyncio
 from datetime import datetime, timedelta
 from hashlib import sha256
 
 from config import DIAS_MAX_VAGA
+
+semaforos = {
+    "linkedin": asyncio.Semaphore(2),
+    "infojobs": asyncio.Semaphore(2),
+    "vagas_com": asyncio.Semaphore(2),
+    "trabalha_brasil": asyncio.Semaphore(2),
+}
 
 HEADERS_BROWSER = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",

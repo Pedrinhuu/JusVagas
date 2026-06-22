@@ -5,7 +5,7 @@ import httpx
 from bs4 import BeautifulSoup
 
 from models import Vaga
-from scrapers import gerar_hash, detectar_modalidade
+from scrapers import gerar_hash, detectar_modalidade, semaforos
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +19,11 @@ def _montar_url(query: str, cidade: str = "") -> str:
 
 
 async def buscar_infojobs(query: str, cidade: str = "") -> List[Vaga]:
+    async with semaforos["infojobs"]:
+        return await _buscar_infojobs(query, cidade)
+
+
+async def _buscar_infojobs(query: str, cidade: str) -> List[Vaga]:
     vagas = []
     url = _montar_url(query, cidade)
 

@@ -63,8 +63,10 @@ function buscarVagasStream() {
         atualizarContadorStream();
 
         if (!filtroStatus || data.status === filtroStatus) {
-            grid.insertBefore(criarCard(data), grid.firstChild);
-            empty.style.display = "none";
+            if (!document.getElementById(`vaga-${data.id}`)) {
+                grid.insertBefore(criarCard(data), grid.firstChild);
+                empty.style.display = "none";
+            }
         }
     };
 
@@ -140,6 +142,7 @@ function carregarMais() {
 function criarCard(vaga) {
     const card = document.createElement("div");
     card.className = "card";
+    card.id = `vaga-${vaga.id}`;
     card.dataset.id = vaga.id;
 
     const dataRel = vaga.data_publicacao ? tempoRelativo(vaga.data_publicacao) : "Data não informada";

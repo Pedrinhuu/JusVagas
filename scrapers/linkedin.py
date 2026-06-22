@@ -13,6 +13,20 @@ logger = logging.getLogger(__name__)
 
 BASE_URL = "https://www.linkedin.com/jobs/search/"
 
+PAISES_INVALIDOS = [
+    "estados unidos", "united states", "argentina", "chile",
+    "colombia", "mexico", "méxico", "portugal", "espanha", "spain",
+    "united kingdom", "canada", "france", "germany", "italy",
+    "australia", "india", "peru", "uruguay", "paraguai",
+]
+
+
+def eh_localizacao_valida(cidade: str) -> bool:
+    if not cidade:
+        return True
+    cidade_lower = cidade.lower()
+    return not any(pais in cidade_lower for pais in PAISES_INVALIDOS)
+
 
 async def buscar_linkedin(query: str, cidade: str = "Rio de Janeiro", incluir_remoto: bool = False) -> List[Vaga]:
     async with semaforos["linkedin"]:
@@ -80,6 +94,9 @@ async def _buscar_linkedin(query: str, cidade: str, incluir_remoto: bool) -> Lis
                             partes = cidade_vaga.rsplit(", ", 1)
                             cidade_vaga = partes[0]
                             estado_vaga = partes[1][:2] if len(partes) > 1 else ""
+
+                        if not eh_localizacao_valida(cidade_vaga):
+                            continue
 
                         h = gerar_hash(titulo, empresa, href)
                         if h in hashes:

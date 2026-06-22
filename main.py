@@ -16,6 +16,7 @@ from config import PALAVRAS_CHAVE, CIDADES, BUSCA_INTERVALO_HORAS, BUSCAR_REMOTO
 from database import engine, init_db, get_session
 from models import Vaga
 from scrapers import vaga_dentro_do_prazo
+from scrapers.linkedin import eh_localizacao_valida
 from scrapers.infojobs import buscar_infojobs
 from scrapers.vagas_com import buscar_vagas_com
 from scrapers.linkedin import buscar_linkedin
@@ -81,6 +82,7 @@ async def _executar_busca():
     duplicatas = 0
     descartadas_prazo = 0
     descartadas_relevancia = 0
+    descartadas_local = 0
     with Session(engine) as session:
         hashes_existentes = set(
             row[0] for row in session.exec(select(Vaga.hash_dedup)).all()
@@ -95,6 +97,9 @@ async def _executar_busca():
             if not filtrar_relevancia(vaga):
                 descartadas_relevancia += 1
                 continue
+            if not eh_localizacao_valida(vaga.cidade):
+                descartadas_local += 1
+                continue
             session.add(vaga)
             hashes_existentes.add(vaga.hash_dedup)
             novas += 1
@@ -105,7 +110,8 @@ async def _executar_busca():
         f"Busca finalizada: {len(todas_vagas)} brutas | "
         f"{novas} inseridas | {duplicatas} duplicatas | "
         f"{descartadas_prazo} fora do prazo | "
-        f"{descartadas_relevancia} irrelevantes"
+        f"{descartadas_relevancia} irrelevantes | "
+        f"{descartadas_local} fora do Brasil"
     )
 
 
@@ -154,6 +160,7 @@ async def executar_busca_stream() -> AsyncGenerator[dict, None]:
         duplicatas = 0
         descartadas_prazo = 0
         descartadas_relevancia = 0
+        descartadas_local = 0
         total_bruto = 0
 
         with Session(engine) as session:
@@ -177,6 +184,9 @@ async def executar_busca_stream() -> AsyncGenerator[dict, None]:
                     continue
                 if not filtrar_relevancia(vaga):
                     descartadas_relevancia += 1
+                    continue
+                if not eh_localizacao_valida(vaga.cidade):
+                    descartadas_local += 1
                     continue
 
                 session.add(vaga)
@@ -211,11 +221,13 @@ async def executar_busca_stream() -> AsyncGenerator[dict, None]:
             f"Busca stream finalizada: {total_bruto} brutas | "
             f"{novas} inseridas | {duplicatas} duplicatas | "
             f"{descartadas_prazo} fora do prazo | "
-            f"{descartadas_relevancia} irrelevantes"
+            f"{descartadas_relevancia} irrelevantes | "
+            f"{descartadas_local} fora do Brasil"
         )
 
         yield {"fim": True, "novas": novas, "total_bruto": total_bruto,
-               "duplicatas": duplicatas, "descartadas_relevancia": descartadas_relevancia}
+               "duplicatas": duplicatas, "descartadas_relevancia": descartadas_relevancia,
+               "descartadas_local": descartadas_local}
     finally:
         busca_lock.release()
 

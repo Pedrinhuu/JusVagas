@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+sqlmodel
+httpx
+beautifulsoup4
+apscheduler
+python-dotenv

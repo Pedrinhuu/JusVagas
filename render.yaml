@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: jusvagas
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: BUSCA_INTERVALO_HORAS
+        value: "6"
+      - key: DIAS_MAX_VAGA
+        value: "30"
+      - key: BUSCAR_REMOTO
+        value: "true"

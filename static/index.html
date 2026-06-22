@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JusVagas — Vagas Jurídicas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-inner">
+            <div class="header-left">
+                <h1 class="logo">JusVagas</h1>
+                <span class="badge-count" id="badge-novas">0 vagas novas hoje</span>
+            </div>
+            <button class="btn-primary" id="btn-buscar" onclick="dispararBusca()">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M7 1a6 6 0 104.32 10.14l3.27 3.27a.75.75 0 001.06-1.06l-3.27-3.27A6 6 0 007 1zM2.5 7a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0z" fill="currentColor"/></svg>
+                Buscar agora
+            </button>
+        </div>
+    </header>
+
+    <div class="filtros-bar" id="filtros-bar">
+        <div class="filtros-inner">
+            <input type="text" id="filtro-texto" placeholder="Buscar vagas..." class="filtro-input">
+            <select id="filtro-status" class="filtro-select">
+                <option value="">Todas</option>
+                <option value="nova" selected>Novas</option>
+                <option value="favorita">Favoritas</option>
+                <option value="aplicada">Aplicadas</option>
+                <option value="descartada">Descartadas</option>
+            </select>
+            <select id="filtro-area" class="filtro-select">
+                <option value="">Todas as áreas</option>
+                <option value="Civil">Civil</option>
+                <option value="Imobiliário">Imobiliário</option>
+                <option value="Trabalhista">Trabalhista</option>
+                <option value="Geral">Geral</option>
+            </select>
+            <select id="filtro-regime" class="filtro-select">
+                <option value="">Todos os regimes</option>
+                <option value="CLT">CLT</option>
+                <option value="PJ">PJ</option>
+                <option value="Estágio">Estágio</option>
+                <option value="Sócio">Sócio</option>
+            </select>
+            <select id="filtro-fonte" class="filtro-select">
+                <option value="">Todas as fontes</option>
+                <option value="Infojobs">Infojobs</option>
+                <option value="LinkedIn">LinkedIn</option>
+                <option value="Vagas.com">Vagas.com</option>
+                <option value="TrabalhaBrasil">Trabalha Brasil</option>
+            </select>
+            <select id="filtro-modalidade" class="filtro-select">
+                <option value="">Todas modalidades</option>
+                <option value="presencial">Presencial</option>
+                <option value="híbrido">Híbrido</option>
+                <option value="remoto">Remoto</option>
+            </select>
+            <select id="filtro-ordenar" class="filtro-select">
+                <option value="recentes">Mais recentes</option>
+                <option value="antigas">Mais antigas</option>
+            </select>
+            <button class="btn-limpar" onclick="limparFiltros()">Limpar filtros</button>
+        </div>
+    </div>
+
+    <main class="container">
+        <div class="grid" id="grid-vagas"></div>
+        <div class="empty-state" id="empty-state" style="display:none;">
+            <svg width="64" height="64" viewBox="0 0 64 64" fill="none"><rect x="8" y="12" width="48" height="40" rx="4" stroke="#C8A84B" stroke-width="2" fill="none"/><path d="M20 28h24M20 36h16" stroke="#1A3A5C" stroke-width="2" stroke-linecap="round"/></svg>
+            <h3>Nenhuma vaga encontrada</h3>
+            <p>Tente ajustar os filtros ou clique em "Buscar agora"</p>
+        </div>
+        <div class="carregar-mais" id="carregar-mais" style="display:none;">
+            <button class="btn-secondary" onclick="carregarMais()">Carregar mais</button>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <span id="ultima-atualizacao">Última busca: —</span>
+    </footer>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

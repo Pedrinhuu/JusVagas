@@ -24,5 +24,3 @@ DIAS_MAX_VAGA = 30
 ORDENACAO_PADRAO = "data_publicacao"
 
 BUSCA_INTERVALO_HORAS = int(os.getenv("BUSCA_INTERVALO_HORAS", "6"))
-
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///jusvagas.db")

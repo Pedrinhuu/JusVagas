@@ -1,7 +1,13 @@
-from sqlmodel import SQLModel, Session, create_engine
-from config import DATABASE_URL
+import os
 
-engine = create_engine(DATABASE_URL, echo=False)
+from sqlmodel import SQLModel, Session, create_engine
+
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./jusvagas.db")
+
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+engine = create_engine(DATABASE_URL)
 
 
 def init_db():

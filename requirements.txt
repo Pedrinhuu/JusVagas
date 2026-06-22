@@ -5,3 +5,4 @@ httpx
 beautifulsoup4
 apscheduler
 python-dotenv
+psycopg2-binary

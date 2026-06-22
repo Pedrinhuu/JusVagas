@@ -2,9 +2,12 @@ let offset = 0;
 const LIMIT = 50;
 let debounceTimer = null;
 
+let pollingTimer = null;
+
 document.addEventListener("DOMContentLoaded", () => {
     carregarStatus();
     carregarVagas();
+    iniciarPolling();
 
     const filtros = ["filtro-texto", "filtro-status", "filtro-area", "filtro-regime", "filtro-fonte", "filtro-modalidade", "filtro-ordenar"];
     filtros.forEach(id => {
@@ -15,6 +18,23 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 });
+
+function iniciarPolling() {
+    let ultimoTotal = -1;
+    pollingTimer = setInterval(async () => {
+        try {
+            const resp = await fetch("/api/status");
+            const data = await resp.json();
+            const totalAtual = data.total_vagas;
+            if (ultimoTotal !== -1 && totalAtual !== ultimoTotal) {
+                offset = 0;
+                carregarVagas();
+            }
+            ultimoTotal = totalAtual;
+            carregarStatus();
+        } catch (e) { /* silencioso */ }
+    }, 15000);
+}
 
 function getFiltros() {
     const params = new URLSearchParams();
@@ -167,7 +187,7 @@ async function dispararBusca() {
     try {
         await fetch("/api/buscar", { method: "POST" });
         mostrarToast("Busca iniciada em segundo plano");
-        setTimeout(() => { offset = 0; carregarVagas(); carregarStatus(); }, 5000);
+        aguardarBusca();
     } catch (e) {
         mostrarToast("Erro ao iniciar busca");
     } finally {
@@ -199,6 +219,25 @@ function limparFiltros() {
     document.getElementById("filtro-ordenar").value = "recentes";
     offset = 0;
     carregarVagas();
+}
+
+function aguardarBusca() {
+    let tentativas = 0;
+    const intervalo = setInterval(async () => {
+        tentativas++;
+        try {
+            const resp = await fetch("/api/status");
+            const data = await resp.json();
+            if (data.ultima_busca || tentativas >= 40) {
+                clearInterval(intervalo);
+                offset = 0;
+                carregarVagas();
+                carregarStatus();
+            }
+        } catch (e) {
+            if (tentativas >= 40) clearInterval(intervalo);
+        }
+    }, 10000);
 }
 
 function diasDesde(dataStr) {

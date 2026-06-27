@@ -76,7 +76,7 @@ async def _buscar_vagas_com(query: str, incluir_remoto: bool) -> List[Vaga]:
                         vagas.append(Vaga(
                             titulo=titulo,
                             empresa=empresa,
-                            cidade=cidade or "Não informada",
+                            cidade=cidade or None,
                             estado=estado,
                             regime=nivel if nivel else None,
                             modalidade=modalidade,

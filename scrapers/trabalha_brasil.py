@@ -84,7 +84,7 @@ async def _buscar_trabalha_brasil(query: str, incluir_remoto: bool) -> List[Vaga
                         vagas.append(Vaga(
                             titulo=titulo,
                             empresa=empresa,
-                            cidade=cidade_vaga or "Não informada",
+                            cidade=cidade_vaga or None,
                             estado=estado_vaga,
                             regime=regime,
                             modalidade=modalidade,

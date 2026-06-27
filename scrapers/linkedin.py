@@ -74,7 +74,7 @@ async def _buscar_linkedin(query: str, cidade: str, incluir_remoto: bool) -> Lis
                             continue
 
                         empresa = empresa_el.get_text(strip=True) if empresa_el else "Não informada"
-                        local = local_el.get_text(strip=True) if local_el else cidade
+                        local = local_el.get_text(strip=True) if local_el else ""
 
                         data_pub = None
                         if data_el and data_el.get("datetime"):
@@ -107,7 +107,7 @@ async def _buscar_linkedin(query: str, cidade: str, incluir_remoto: bool) -> Lis
                             titulo=titulo,
                             empresa=empresa,
                             cidade=cidade_vaga,
-                            estado=estado_vaga or "RJ",
+                            estado=estado_vaga or "",
                             modalidade=modalidade,
                             url=href,
                             fonte="LinkedIn",

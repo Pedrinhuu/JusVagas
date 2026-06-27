@@ -88,15 +88,12 @@ async def _buscar_infojobs(query: str, cidade: str) -> List[Vaga]:
                         cidade_vaga = t.split(",")[0].strip()
                         break
 
-            if cidade and cidade_vaga and cidade.lower() not in cidade_vaga.lower():
-                continue
-
             modalidade = detectar_modalidade(titulo, descricao)
 
             vagas.append(Vaga(
                 titulo=titulo,
                 empresa=empresa or "Não informada",
-                cidade=cidade_vaga or cidade,
+                cidade=cidade_vaga or None,
                 regime=regime,
                 modalidade=modalidade,
                 descricao=descricao[:500] if descricao else None,
